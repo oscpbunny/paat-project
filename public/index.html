@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    
+    <!-- App Information -->
+    <title>PAAT - AI Personal Assistant Agent Tool</title>
+    <meta name="description" content="AI Personal Assistant Agent Tool - Local AI project management with Vamsh and Ollama integration" />
+    <meta name="author" content="PAAT Development Team" />
+    
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      script-src 'self' 'unsafe-inline';
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      font-src 'self' https://fonts.gstatic.com data:;
+      img-src 'self' data: blob:;
+      connect-src 'self' http://localhost:* ws://localhost:*;
+    ">
+    
+    <!-- Theme and Icons -->
+    <meta name="theme-color" content="#0f0f23" />
+    <meta name="color-scheme" content="dark light" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    
+    <!-- Preload Critical Resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Google Fonts -->
+    <link 
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" 
+      rel="stylesheet"
+    />
+    
+    <!-- Critical CSS for loading state -->
+    <style>
+      /* Critical styles to prevent FOUC */
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background: #0f0f23;
+        color: #f8fafc;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        overflow: hidden;
+      }
+      
+      #root {
+        height: 100%;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      /* Loading animation */
+      .paat-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #0f0f23;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+      
+      .paat-loader-spinner {
+        width: 48px;
+        height: 48px;
+        border: 3px solid #1a1a2e;
+        border-top: 3px solid #6366f1;
+        border-radius: 50%;
+        animation: paatSpin 1s linear infinite;
+      }
+      
+      .paat-loader-text {
+        position: absolute;
+        top: 60%;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 14px;
+        color: #64748b;
+        margin-top: 20px;
+      }
+      
+      @keyframes paatSpin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      @keyframes paatFadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      
+      /* Hide loader when app loads */
+      .app-loaded .paat-loader {
+        opacity: 0;
+        transition: opacity 0.3s ease-out;
+        pointer-events: none;
+      }
+      
+      /* Scrollbar styling */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      
+      ::-webkit-scrollbar-track {
+        background: #1a1a2e;
+      }
+      
+      ::-webkit-scrollbar-thumb {
+        background: #6366f1;
+        border-radius: 4px;
+      }
+      
+      ::-webkit-scrollbar-thumb:hover {
+        background: #4f46e5;
+      }
+      
+      /* Selection styling */
+      ::selection {
+        background: rgba(99, 102, 241, 0.3);
+        color: #f8fafc;
+      }
+      
+      /* Focus outline */
+      :focus-visible {
+        outline: 2px solid #6366f1;
+        outline-offset: 2px;
+      }
+    </style>
+  </head>
+  
+  <body>
+    <!-- App will render here -->
+    <div id="root">
+      <!-- Loading screen -->
+      <div class="paat-loader" id="paat-initial-loader">
+        <div>
+          <div class="paat-loader-spinner"></div>
+          <div class="paat-loader-text">Loading PAAT...</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- App initialization script -->
+    <script>
+      // Remove loader when React app is ready
+      window.addEventListener('DOMContentLoaded', function() {
+        console.log('PAAT: DOM loaded');
+        
+        // Set up mutation observer to detect when React content is rendered
+        const observer = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.addedNodes.length > 0) {
+              const appContent = document.querySelector('[data-testid="app-content"], .app-layout, .MuiThemeProvider-root');
+              if (appContent) {
+                document.body.classList.add('app-loaded');
+                setTimeout(() => {
+                  const loader = document.getElementById('paat-initial-loader');
+                  if (loader && loader.parentNode) {
+                    loader.parentNode.removeChild(loader);
+                  }
+                }, 300);
+                observer.disconnect();
+              }
+            }
+          });
+        });
+        
+        observer.observe(document.getElementById('root'), {
+          childList: true,
+          subtree: true
+        });
+        
+        // Fallback: remove loader after 5 seconds
+        setTimeout(function() {
+          document.body.classList.add('app-loaded');
+          const loader = document.getElementById('paat-initial-loader');
+          if (loader && loader.parentNode) {
+            loader.parentNode.removeChild(loader);
+          }
+        }, 5000);
+      });
+      
+      // Prevent context menu (right-click) in production
+      if (window.location.protocol === 'file:') {
+        document.addEventListener('contextmenu', function(e) {
+          e.preventDefault();
+        });
+      }
+      
+      // Performance measurement
+      window.paatPerformance = {
+        startTime: Date.now(),
+        markReady: function() {
+          console.log('PAAT: Ready in', Date.now() - this.startTime, 'ms');
+        }
+      };
+    </script>
+    
+    <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
+      
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
+      
+      To begin development, run:
+        npm run electron:dev
+      
+      To create a production bundle, use:
+        npm run build
+    -->
+  </body>
+</html>

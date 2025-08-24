@@ -1,0 +1,145 @@
+{
+  "name": "paat",
+  "version": "0.1.0",
+  "description": "AI Personal Assistant Agent Tool - Local project management with Vamsh AI integration",
+  "main": "dist/main/main/main.js",
+  "homepage": "./",
+  "author": {
+    "name": "PAAT Development Team",
+    "email": "dev@paat.local"
+  },
+  "license": "MIT",
+  "private": true,
+  "keywords": [
+    "electron",
+    "typescript",
+    "react",
+    "ai",
+    "project-management",
+    "vamsh",
+    "ollama",
+    "local-ai"
+  ],
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "electron": "electron .",
+    "electron:dev": "node scripts/electron-dev.js",
+    "electron:build": "npm run build && npm run build:electron",
+    "build:electron": "npm run build:main && npm run build:preload",
+    "build:main": "tsc --project tsconfig.main.json",
+    "build:preload": "tsc --project tsconfig.preload.json",
+    "build:all": "npm run build && npm run build:electron",
+    "dist": "npm run build:all && electron-builder",
+    "dist:win": "npm run build:all && electron-builder --win",
+    "dist:mac": "npm run build:all && electron-builder --mac",
+    "dist:linux": "npm run build:all && electron-builder --linux",
+    "clean": "rimraf dist build",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@fontsource/inter": "^5.0.8",
+    "@fontsource/jetbrains-mono": "^5.0.8",
+    "@mui/icons-material": "^5.14.1",
+    "@mui/material": "^5.14.1",
+    "@mui/x-data-grid": "^6.10.1",
+    "@mui/x-date-pickers": "^6.10.1",
+    "@types/react-beautiful-dnd": "^13.1.8",
+    "@types/react-router-dom": "^5.3.3",
+    "axios": "^1.11.0",
+    "chokidar": "^3.5.3",
+    "date-fns": "^2.30.0",
+    "electron-is-dev": "^2.0.0",
+    "electron-store": "^8.1.0",
+    "framer-motion": "^10.16.1",
+    "lodash": "^4.17.21",
+    "lucide-react": "^0.263.1",
+    "node-cron": "^3.0.2",
+    "react": "^18.2.0",
+    "react-beautiful-dnd": "^13.1.1",
+    "react-dom": "^18.2.0",
+    "react-hot-toast": "^2.4.1",
+    "react-router-dom": "^6.30.1",
+    "react-scripts": "5.0.1",
+    "react-syntax-highlighter": "^15.5.0",
+    "react-virtualized": "^9.22.5",
+    "react-window": "^1.8.8",
+    "recharts": "^2.15.4",
+    "simple-git": "^3.19.1",
+    "socket.io-client": "^4.7.2",
+    "sqlite3": "^5.1.6",
+    "typescript": "^4.9.5",
+    "uuid": "^9.0.0",
+    "ws": "^8.13.0",
+    "zustand": "^4.4.1"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/lodash": "^4.14.195",
+    "@types/node": "^20.4.5",
+    "@types/react": "^18.2.17",
+    "@types/react-dom": "^18.2.7",
+    "@types/uuid": "^9.0.2",
+    "@types/ws": "^8.5.5",
+    "@typescript-eslint/eslint-plugin": "^6.2.0",
+    "@typescript-eslint/parser": "^6.2.0",
+    "concurrently": "^8.2.0",
+    "cross-env": "^7.0.3",
+    "electron": "^25.3.1",
+    "electron-builder": "^24.6.3",
+    "electron-reload": "^2.0.0-alpha.1",
+    "eslint": "^8.45.0",
+    "eslint-plugin-react": "^7.33.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "jest-environment-jsdom": "^30.0.5",
+    "rimraf": "^5.0.1",
+    "wait-on": "^7.0.1"
+  },
+  "build": {
+    "appId": "com.paat.app",
+    "productName": "PAAT",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": "dmg"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icons/icon.ico"
+    },
+    "linux": {
+      "target": "AppImage",
+      "category": "Development"
+    }
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
