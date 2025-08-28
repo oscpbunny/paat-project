@@ -22,14 +22,19 @@ import './assets/styles/globals.css';
 // Import stores
 import { useAppStore } from './stores/appStore';
 import { useThemeStore } from './stores/themeStore';
+import { useSettingsStore, useCurrentTheme } from './stores/settingsStore';
 
-// Create MUI theme
-const createMUITheme = (darkMode: boolean) =>
-  createTheme({
+// Create MUI theme with settings integration
+const createMUITheme = (darkMode: boolean, settings?: any) => {
+  const primaryColor = settings?.app?.primaryColor || '#6366f1';
+  const customFontSize = settings?.ui?.fontSize || 'medium';
+  const borderRadius = settings?.ui?.borderRadius || 8;
+  
+  return createTheme({
     palette: {
       mode: darkMode ? 'dark' : 'light',
       primary: {
-        main: '#6366f1',
+        main: primaryColor,
         dark: '#4f46e5',
         light: '#818cf8',
       },
@@ -57,7 +62,7 @@ const createMUITheme = (darkMode: boolean) =>
       h6: { fontWeight: 500 },
     },
     shape: {
-      borderRadius: 8,
+      borderRadius: borderRadius,
     },
     components: {
       MuiButton: {
@@ -65,7 +70,7 @@ const createMUITheme = (darkMode: boolean) =>
           root: {
             textTransform: 'none',
             fontWeight: 500,
-            borderRadius: 8,
+            borderRadius: borderRadius,
           },
         },
       },
@@ -86,18 +91,22 @@ const createMUITheme = (darkMode: boolean) =>
       },
     },
   });
+};
 
 const App: React.FC = () => {
   // Global state
   const { isLoading, currentProject, sidebarCollapsed } = useAppStore();
   const { isDarkMode } = useThemeStore();
+  const { settings, isInitialized: settingsInitialized } = useSettingsStore();
+  const currentTheme = useCurrentTheme();
   
   // Local state
   const [isWindowMaximized, setIsWindowMaximized] = useState(false);
   const [appVersion, setAppVersion] = useState<string>('');
 
-  // Theme
-  const theme = createMUITheme(isDarkMode);
+  // Theme - use settings if available, fallback to theme store
+  const effectiveTheme = settingsInitialized ? currentTheme : (isDarkMode ? 'dark' : 'light');
+  const theme = createMUITheme(effectiveTheme === 'dark', settings);
 
   // Initialize app
   useEffect(() => {

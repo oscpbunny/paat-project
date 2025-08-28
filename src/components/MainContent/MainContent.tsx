@@ -12,6 +12,7 @@ import Dashboard from '../Dashboard/Dashboard';
 import ProjectsPage from '../Projects/ProjectsPage';
 import ProjectDetailsPage from '../Projects/ProjectDetailsPage';
 import MonitoringPage from '../Monitoring/MonitoringPage';
+import SettingsPage from '../Settings/SettingsPage';
 
 const MainContent: React.FC = () => {
   return (
@@ -31,7 +32,7 @@ const MainContent: React.FC = () => {
         <Route path="/tasks" element={<Dashboard />} />
         
         {/* Settings Routes */}
-        <Route path="/settings" element={<Dashboard />} />
+        <Route path="/settings" element={<SettingsPage />} />
         
         {/* Default redirect to dashboard */}
         <Route path="*" element={<Navigate to="/" replace />} />

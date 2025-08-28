@@ -82,10 +82,15 @@ export class VamshErrorHandlingService extends EventEmitter {
   private circuitBreakerStates: Map<string, CircuitBreakerState> = new Map();
   private errorHistory: VamshError[] = [];
   private readonly maxErrorHistory = 1000;
+  private maintenanceInterval?: NodeJS.Timeout;
+  private circuitBreakerInterval?: NodeJS.Timeout;
 
   constructor() {
     super();
-    this.setupPeriodicMaintenance();
+    // Only setup maintenance in non-test environment
+    if (process.env.NODE_ENV !== 'test') {
+      this.setupPeriodicMaintenance();
+    }
   }
 
   /**
@@ -108,8 +113,8 @@ export class VamshErrorHandlingService extends EventEmitter {
         context: { ...context, timestamp: new Date(), attempt: 0, maxAttempts: config.maxAttempts },
         isRetryable: false
       });
-      // Use setTimeout to avoid blocking the retry logic
-      setTimeout(() => this.emit('circuit-breaker-opened', error), 0);
+      // Emit synchronously for predictable test behavior
+      this.emit('circuit-breaker-opened', error);
       throw new Error('Circuit breaker is open');
     }
 
@@ -129,14 +134,14 @@ export class VamshErrorHandlingService extends EventEmitter {
         this.recordSuccess(serviceKey);
         
         if (attempt > 1) {
-          // Use setTimeout for non-blocking event emission
-          setTimeout(() => this.emit('recovery', this.createError({
+          // Emit recovery event synchronously for predictable behavior
+          this.emit('recovery', this.createError({
             type: 'connection',
             severity: 'low',
             message: `Operation succeeded after ${attempt} attempts`,
             context: { ...context, timestamp: new Date(), attempt, maxAttempts: config.maxAttempts },
             isRetryable: false
-          })), 0);
+          }));
         }
 
         return result;
@@ -153,13 +158,13 @@ export class VamshErrorHandlingService extends EventEmitter {
 
         this.recordError(vamshError);
         
-        // Emit error event asynchronously to avoid interfering with retry logic
-        setTimeout(() => this.emit('error', vamshError), 0);
+        // Emit error event synchronously for predictable test behavior
+        this.emit('error', vamshError);
 
         // Check if we should retry
         if (attempt < config.maxAttempts && vamshError.isRetryable) {
-          // Emit retry event asynchronously
-          setTimeout(() => this.emit('retry', vamshError), 0);
+          // Emit retry event synchronously
+          this.emit('retry', vamshError);
           continue;
         }
 
@@ -570,13 +575,13 @@ export class VamshErrorHandlingService extends EventEmitter {
    */
   private setupPeriodicMaintenance(): void {
     // Clean up old errors every 10 minutes
-    setInterval(() => {
+    this.maintenanceInterval = setInterval(() => {
       const cutoff = new Date(Date.now() - (24 * 60 * 60 * 1000)); // 24 hours
       this.errorHistory = this.errorHistory.filter(e => e.timestamp >= cutoff);
     }, 10 * 60 * 1000);
 
     // Check circuit breaker states every minute
-    setInterval(() => {
+    this.circuitBreakerInterval = setInterval(() => {
       const now = new Date();
       for (const [key, state] of this.circuitBreakerStates.entries()) {
         if (state.state === 'open' && state.nextAttemptTime && now >= state.nextAttemptTime) {
@@ -594,6 +599,14 @@ export class VamshErrorHandlingService extends EventEmitter {
     this.removeAllListeners();
     this.circuitBreakerStates.clear();
     this.errorHistory = [];
+    
+    // Clear any intervals that might have been set
+    if (this.maintenanceInterval) {
+      clearInterval(this.maintenanceInterval);
+    }
+    if (this.circuitBreakerInterval) {
+      clearInterval(this.circuitBreakerInterval);
+    }
   }
 }
 

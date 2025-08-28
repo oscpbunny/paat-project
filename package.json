@@ -1,6 +1,6 @@
 {
   "name": "paat",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "AI Personal Assistant Agent Tool - Local project management with Vamsh AI integration",
   "main": "dist/main/main/main.js",
   "homepage": "./",
@@ -20,10 +20,6 @@
     "ollama",
     "local-ai"
   ],
-  "directories": {
-    "doc": "docs",
-    "test": "tests"
-  },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
@@ -43,7 +39,12 @@
     "clean": "rimraf dist build",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx",
-    "lint:fix": "eslint src --ext .ts,.tsx --fix"
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "analyze": "npm run build && npx webpack-bundle-analyzer build/static/js/*.js",
+    "build:dist": "node scripts/build-distribution.js",
+    "build:dist:win": "node scripts/build-distribution.js win",
+    "build:dist:mac": "node scripts/build-distribution.js mac",
+    "build:dist:linux": "node scripts/build-distribution.js linux"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
@@ -60,7 +61,7 @@
     "chokidar": "^3.5.3",
     "date-fns": "^2.30.0",
     "electron-is-dev": "^2.0.0",
-    "electron-store": "^8.1.0",
+    "electron-store": "^8.2.0",
     "framer-motion": "^10.16.1",
     "lodash": "^4.17.21",
     "lucide-react": "^0.263.1",
@@ -84,9 +85,11 @@
     "zustand": "^4.4.1"
   },
   "devDependencies": {
+    "@craco/craco": "^7.1.0",
     "@testing-library/jest-dom": "^6.8.0",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^30.0.0",
     "@types/lodash": "^4.14.195",
     "@types/node": "^20.4.5",
     "@types/react": "^18.2.17",
@@ -99,35 +102,151 @@
     "cross-env": "^7.0.3",
     "electron": "^25.3.1",
     "electron-builder": "^24.6.3",
+    "electron-rebuild": "^3.2.9",
     "electron-reload": "^2.0.0-alpha.1",
     "eslint": "^8.45.0",
     "eslint-plugin-react": "^7.33.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "jest-environment-jsdom": "^30.0.5",
+    "react-app-rewired": "^2.2.1",
     "rimraf": "^5.0.1",
-    "wait-on": "^7.0.1"
+    "wait-on": "^7.0.1",
+    "webpack-bundle-analyzer": "^4.10.2"
   },
   "build": {
     "appId": "com.paat.app",
-    "productName": "PAAT",
+    "productName": "PAAT - AI Personal Assistant Agent Tool",
+    "artifactName": "${productName}-${version}-${arch}.${ext}",
+    "copyright": "Copyright © 2025 PAAT Development Team",
     "directories": {
+      "buildResources": "assets",
       "output": "release"
     },
     "files": [
+      "build/**/*",
       "dist/**/*",
-      "package.json"
+      "package.json",
+      "!**/*.map",
+      "!node_modules"
     ],
     "mac": {
       "category": "public.app-category.developer-tools",
-      "target": "dmg"
+      "icon": "assets/icons/icon.icns.placeholder",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "assets/entitlements.mac.plist",
+      "entitlementsInherit": "assets/entitlements.mac.plist"
     },
     "win": {
-      "target": "nsis",
-      "icon": "assets/icons/icon.ico"
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
+      ],
+      "icon": "assets/icons/icon.ico.placeholder",
+      "publisherName": "PAAT Development Team",
+      "verifyUpdateCodeSignature": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "PAAT"
     },
     "linux": {
-      "target": "AppImage",
-      "category": "Development"
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "rpm",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "tar.gz",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icons/icon.png.placeholder",
+      "category": "Development",
+      "description": "AI-powered project management and automation tool with local AI integration",
+      "maintainer": "PAAT Development Team <dev@paat.local>",
+      "desktop": {
+        "Name": "PAAT",
+        "Exec": "paat %U",
+        "Terminal": "false",
+        "Type": "Application",
+        "Icon": "paat",
+        "StartupWMClass": "PAAT",
+        "Comment": "AI Personal Assistant Agent Tool",
+        "Categories": "Development;Utility;"
+      }
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "iconSize": 80,
+      "iconTextSize": 12,
+      "window": {
+        "width": 540,
+        "height": 380
+      }
+    },
+    "publish": {
+      "provider": "generic",
+      "url": "https://releases.paat.local/"
     }
   },
   "browserslist": {

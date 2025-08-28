@@ -48,6 +48,13 @@ import { databaseService } from '../../services/database';
 import { vamshService } from '../../services/VamshService';
 import { vamshMonitoringService } from '../../services/VamshMonitoringService';
 import { useAppStore } from '../../stores/appStore';
+import { webSocketService } from '../../services/WebSocketService';
+import { useRealTimeStore, useConnectionStatus } from '../../stores/realTimeStore';
+import { vamshHealthMonitor } from '../../services/VamshHealthMonitorService';
+
+// Import new real-time components
+import RealTimeMonitor from './RealTimeMonitor';
+import ProjectWizard, { ProjectWizardData } from '../ProjectWizard/ProjectWizard';
 
 interface Project {
   id: string;
@@ -96,6 +103,7 @@ const Dashboard: React.FC = () => {
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   // Store
   const { setCurrentProject, setLoading: setAppLoading } = useAppStore();
@@ -192,15 +200,18 @@ const Dashboard: React.FC = () => {
         completedProjects: 1,
         totalTasks: 15,
         completedTasks: 8,
-        vamshHealthy: false, // Will be checked via API
+        vamshHealthy: false, // Will be checked via health monitor
         ollamaHealthy: true
       };
       
-      // Try to check Vamsh health but don't fail if it's not available
+      // Get real-time Vamsh health status from health monitor
       try {
-        const vamshHealth = await vamshService.isHealthy();
-        mockStats.vamshHealthy = vamshHealth;
-      } catch {
+        const vamshHealthy = vamshHealthMonitor.isHealthy();
+        const vamshSummary = vamshHealthMonitor.getHealthSummary();
+        mockStats.vamshHealthy = vamshHealthy;
+        console.log('Vamsh health status:', vamshSummary);
+      } catch (error) {
+        console.warn('Failed to get Vamsh health status:', error);
         mockStats.vamshHealthy = false;
       }
       
@@ -282,12 +293,15 @@ const Dashboard: React.FC = () => {
 
   // Handle project creation
   const handleCreateProject = () => {
-    setLoading(true);
-    // Navigate to project creation wizard (to be implemented)
-    setTimeout(() => {
-      setLoading(false);
-      console.log('Opening project creation wizard...');
-    }, 1000);
+    setWizardOpen(true);
+  };
+
+  // Handle wizard completion
+  const handleWizardComplete = (data: ProjectWizardData) => {
+    console.log('Project created:', data);
+    // Here you would normally save to database and refresh the data
+    // For now, just reload dashboard data
+    loadDashboardData();
   };
 
   // Handle project selection
@@ -612,57 +626,10 @@ const Dashboard: React.FC = () => {
             </motion.div>
           </Grid>
 
-          {/* Recent Activity */}
+          {/* Real-time Monitor */}
           <Grid item xs={12} lg={4}>
             <motion.div variants={itemVariants}>
-              <Card sx={{ height: 400 }}>
-                <CardContent>
-                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                    Recent Activity
-                  </Typography>
-                  {loading ? (
-                    <Box>
-                      {[1, 2, 3, 4].map((i) => (
-                        <Box key={i} sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                          <Skeleton variant="circular" width={40} height={40} sx={{ mr: 2 }} />
-                          <Box sx={{ flex: 1 }}>
-                            <Skeleton variant="text" />
-                            <Skeleton variant="text" width="60%" />
-                          </Box>
-                        </Box>
-                      ))}
-                    </Box>
-                  ) : recentActivity.length > 0 ? (
-                    <List sx={{ height: 320, overflow: 'auto' }}>
-                      {recentActivity.map((activity, index) => (
-                        <motion.div
-                          key={activity.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                        >
-                          <ListItem>
-                            <ListItemIcon>
-                              <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
-                                <ProjectIcon fontSize="small" />
-                              </Avatar>
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={`Project "${activity.message}" created`}
-                              secondary={new Date(activity.timestamp).toLocaleDateString()}
-                            />
-                          </ListItem>
-                          {index < recentActivity.length - 1 && <Divider />}
-                        </motion.div>
-                      ))}
-                    </List>
-                  ) : (
-                    <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-                      No recent activity
-                    </Typography>
-                  )}
-                </CardContent>
-              </Card>
+              <RealTimeMonitor height={400} />
             </motion.div>
           </Grid>
 
@@ -726,6 +693,13 @@ const Dashboard: React.FC = () => {
           </Grid>
         </Grid>
       </motion.div>
+
+      {/* Project Creation Wizard */}
+      <ProjectWizard
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        onComplete={handleWizardComplete}
+      />
     </Box>
   );
 };

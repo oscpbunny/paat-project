@@ -1,0 +1,293 @@
+name: PAAT CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ published ]
+
+env:
+  NODE_VERSION: '18.x'
+  PAAT_LOG_LEVEL: 'info'
+
+jobs:
+  # Quality Assurance Job
+  quality:
+    name: Code Quality & Security
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: TypeScript type checking
+      run: npm run type-check
+      
+    - name: ESLint code quality
+      run: npm run lint
+      
+    - name: Security audit
+      run: npm audit --audit-level=high
+      continue-on-error: true
+      
+    - name: Check for outdated dependencies
+      run: npm outdated
+      continue-on-error: true
+
+  # Testing Job
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: quality
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run unit tests
+      run: npm test -- --coverage --watchAll=false
+      env:
+        CI: true
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage/lcov.info
+        flags: unittests
+        name: paat-coverage
+      continue-on-error: true
+
+  # Build Job
+  build:
+    name: Build Application
+    runs-on: ${{ matrix.os }}
+    needs: [quality, test]
+    
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build React application
+      run: npm run build
+      
+    - name: Build Electron processes
+      run: npm run build:electron
+      
+    - name: Verify build artifacts
+      shell: bash
+      run: |
+        if [ -d "build" ]; then
+          echo "✅ React build successful"
+          ls -la build/
+        else
+          echo "❌ React build failed"
+          exit 1
+        fi
+        
+        if [ -d "dist" ]; then
+          echo "✅ Electron build successful"
+          ls -la dist/
+        else
+          echo "❌ Electron build failed"
+          exit 1
+        fi
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-${{ matrix.os }}
+        path: |
+          build/
+          dist/
+        retention-days: 7
+
+  # Package Job (only on release)
+  package:
+    name: Package Distribution
+    runs-on: ${{ matrix.os }}
+    needs: build
+    if: github.event_name == 'release'
+    
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: build-${{ matrix.os }}
+        
+    - name: Package for Windows
+      if: matrix.os == 'windows-latest'
+      run: npm run dist:win
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Package for macOS
+      if: matrix.os == 'macos-latest'
+      run: npm run dist:mac
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        CSC_IDENTITY_AUTO_DISCOVERY: false
+        
+    - name: Package for Linux
+      if: matrix.os == 'ubuntu-latest'
+      run: npm run dist:linux
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Upload distribution artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist-${{ matrix.os }}
+        path: release/
+        retention-days: 30
+        
+    - name: Upload to GitHub Release
+      uses: softprops/action-gh-release@v1
+      if: github.event_name == 'release'
+      with:
+        files: release/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Security Scanning Job
+  security:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    needs: quality
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+      continue-on-error: true
+      
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results.sarif'
+      continue-on-error: true
+
+  # Performance Testing Job
+  performance:
+    name: Performance Testing
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: build-ubuntu-latest
+        
+    - name: Analyze bundle size
+      run: |
+        echo "## Bundle Size Analysis" >> $GITHUB_STEP_SUMMARY
+        echo "| File | Size |" >> $GITHUB_STEP_SUMMARY
+        echo "|------|------|" >> $GITHUB_STEP_SUMMARY
+        
+        if [ -f "build/static/js/main*.js" ]; then
+          main_js=$(ls build/static/js/main*.js)
+          size=$(stat -c%s "$main_js" | numfmt --to=iec)
+          echo "| Main JS | $size |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ -f "build/static/css/main*.css" ]; then
+          main_css=$(ls build/static/css/main*.css)
+          size=$(stat -c%s "$main_css" | numfmt --to=iec)
+          echo "| Main CSS | $size |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        total_size=$(du -sh build/ | cut -f1)
+        echo "| **Total** | **$total_size** |" >> $GITHUB_STEP_SUMMARY
+
+  # Notification Job
+  notify:
+    name: Notifications
+    runs-on: ubuntu-latest
+    needs: [quality, test, build]
+    if: always()
+    
+    steps:
+    - name: Notify on success
+      if: ${{ needs.quality.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' }}
+      run: |
+        echo "✅ PAAT CI/CD Pipeline completed successfully!"
+        echo "- Code Quality: ✅ Passed"
+        echo "- Tests: ✅ Passed" 
+        echo "- Build: ✅ Passed"
+        
+    - name: Notify on failure
+      if: ${{ needs.quality.result == 'failure' || needs.test.result == 'failure' || needs.build.result == 'failure' }}
+      run: |
+        echo "❌ PAAT CI/CD Pipeline failed!"
+        echo "- Code Quality: ${{ needs.quality.result }}"
+        echo "- Tests: ${{ needs.test.result }}"
+        echo "- Build: ${{ needs.build.result }}"
+        exit 1

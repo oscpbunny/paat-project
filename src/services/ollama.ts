@@ -392,6 +392,38 @@ class OllamaService {
   }
 
   /**
+   * Simple generate response method for wizard use
+   */
+  public async generateResponse(
+    model: string,
+    prompt: string,
+    options?: {
+      temperature?: number;
+      max_tokens?: number;
+    }
+  ): Promise<string> {
+    if (!this.isConnected) {
+      throw new Error('Ollama service is not connected');
+    }
+
+    try {
+      const response = await this.generate({
+        model,
+        prompt,
+        options: {
+          temperature: options?.temperature || 0.3,
+          num_predict: options?.max_tokens || 1000
+        }
+      });
+
+      return response.response;
+    } catch (error) {
+      console.error(`Error generating response with model ${model}:`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Generate project documentation or descriptions
    */
   public async generateContent(

@@ -1,30 +1,33 @@
 import { DatabaseService } from '../database';
 
 // Mock SQLite3 for testing
+const mockDatabase = {
+  run: jest.fn(),
+  get: jest.fn(),
+  all: jest.fn(),
+  close: jest.fn()
+};
+
 jest.mock('sqlite3', () => ({
-  verbose: () => ({
-    Database: jest.fn().mockImplementation(() => ({
-      run: jest.fn(),
-      get: jest.fn(),
-      all: jest.fn(),
-      prepare: jest.fn().mockReturnValue({
-        run: jest.fn(),
-        finalize: jest.fn()
-      }),
-      close: jest.fn(),
-      exec: jest.fn()
-    }))
+  Database: jest.fn().mockImplementation((path, callback) => {
+    // Simulate successful database connection
+    setTimeout(() => callback(null), 0);
+    return mockDatabase;
   })
+}));
+
+// Mock fs module to avoid file system dependencies
+jest.mock('fs', () => ({
+  existsSync: jest.fn().mockReturnValue(true),
+  mkdirSync: jest.fn()
 }));
 
 describe('DatabaseService', () => {
   let databaseService: DatabaseService;
-  let mockDb: any;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     databaseService = new DatabaseService();
-    // Access the private db property for testing
-    mockDb = (databaseService as any).db;
+    await databaseService.initialize();
     jest.clearAllMocks();
   });
 

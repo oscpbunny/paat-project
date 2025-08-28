@@ -10,9 +10,32 @@
  */
 
 import sqlite3 from 'sqlite3';
-import { join } from 'path';
-import { app } from 'electron';
-import { existsSync, mkdirSync } from 'fs';
+
+// Conditional imports for Node.js modules
+let path: any;
+let fs: any;
+try {
+  path = require('path');
+  fs = require('fs');
+} catch (error) {
+  // Browser environment fallbacks
+  path = {
+    join: (...args: string[]) => args.join('/'),
+  };
+  fs = {
+    existsSync: () => false,
+    mkdirSync: () => {},
+  };
+}
+
+// Safely import electron
+let app: any;
+try {
+  app = require('electron')?.app;
+} catch (error) {
+  // Electron not available in browser/test environment
+  app = null;
+}
 
 // Database interfaces
 export interface Project {
@@ -79,16 +102,28 @@ class DatabaseService {
   private isInitialized = false;
 
   constructor() {
-    // Get the user data directory
-    const userDataPath = app.getPath('userData');
-    const dbDir = join(userDataPath, 'PAAT');
-    
-    // Ensure the directory exists
-    if (!existsSync(dbDir)) {
-      mkdirSync(dbDir, { recursive: true });
+    try {
+      // Check if we're in Electron environment
+      if (typeof window !== 'undefined' || !app) {
+        // Browser/test environment - use in-memory database
+        this.dbPath = ':memory:';
+      } else {
+        // Electron main process
+        const userDataPath = app.getPath('userData');
+        const dbDir = path.join(userDataPath, 'PAAT');
+        
+        // Ensure the directory exists
+        if (!fs.existsSync(dbDir)) {
+          fs.mkdirSync(dbDir, { recursive: true });
+        }
+        
+        this.dbPath = path.join(dbDir, 'paat.db');
+      }
+    } catch (error) {
+      // Fallback for any environment issues
+      console.warn('Database constructor: Using in-memory database due to environment constraints');
+      this.dbPath = ':memory:';
     }
-    
-    this.dbPath = join(dbDir, 'paat.db');
   }
 
   /**
@@ -481,5 +516,6 @@ class DatabaseService {
   }
 }
 
-// Export singleton instance
+// Export class for testing and singleton instance
+export { DatabaseService };
 export const databaseService = new DatabaseService();

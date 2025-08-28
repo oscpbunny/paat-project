@@ -1,0 +1,184 @@
+MIT License
+
+Copyright (c) 2025 PAAT Development Team
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## Third-Party Licenses
+
+PAAT includes components from third-party sources. The following is a list of 
+these components and their respective licenses:
+
+### Core Dependencies
+
+#### React (MIT License)
+Copyright (c) Meta Platforms, Inc. and affiliates.
+https://github.com/facebook/react/blob/main/LICENSE
+
+#### Material-UI (MIT License)
+Copyright (c) 2014 Call-Em-All
+https://github.com/mui/material-ui/blob/master/LICENSE
+
+#### Electron (MIT License)
+Copyright (c) Electron contributors
+https://github.com/electron/electron/blob/main/LICENSE
+
+#### TypeScript (Apache 2.0)
+Copyright Microsoft Corporation. All rights reserved.
+https://github.com/microsoft/TypeScript/blob/main/LICENSE.txt
+
+#### Zustand (MIT License)
+Copyright (c) 2019 Paul Henschel
+https://github.com/pmndrs/zustand/blob/main/LICENSE
+
+#### SQLite3 (Public Domain)
+SQLite is in the Public Domain
+https://www.sqlite.org/copyright.html
+
+#### Chokidar (MIT License)
+Copyright (c) 2012-2019 Paul Miller & Elan Shanker
+https://github.com/paulmillr/chokidar/blob/master/LICENSE
+
+#### Axios (MIT License)
+Copyright (c) 2014-present Matt Zabriskie & Collaborators
+https://github.com/axios/axios/blob/main/LICENSE
+
+#### Framer Motion (MIT License)
+Copyright (c) 2018 Framer B.V.
+https://github.com/framer/motion/blob/main/LICENSE
+
+#### React Router (MIT License)
+Copyright (c) React Training LLC 2015-2019
+https://github.com/remix-run/react-router/blob/main/LICENSE.md
+
+### Development Dependencies
+
+#### Jest (MIT License)
+Copyright (c) Meta Platforms, Inc. and affiliates.
+https://github.com/facebook/jest/blob/main/LICENSE
+
+#### ESLint (MIT License)
+Copyright JS Foundation and other contributors
+https://github.com/eslint/eslint/blob/main/LICENSE
+
+#### Webpack (MIT License)
+Copyright JS Foundation and other contributors
+https://github.com/webpack/webpack/blob/main/LICENSE
+
+#### Babel (MIT License)
+Copyright (c) 2014-present Sebastian McKenzie and other contributors
+https://github.com/babel/babel/blob/main/LICENSE
+
+#### Prettier (MIT License)
+Copyright © James Long and contributors
+https://github.com/prettier/prettier/blob/main/LICENSE
+
+### AI Integration Dependencies
+
+#### Ollama Client Libraries
+Various licenses - see individual packages for details
+
+#### Socket.io (MIT License)
+Copyright (c) 2014 Guillermo Rauch
+https://github.com/socketio/socket.io/blob/main/LICENSE
+
+### Icon and Asset Licenses
+
+#### Material Icons (Apache 2.0)
+Copyright Google Inc.
+https://github.com/google/material-design-icons/blob/master/LICENSE
+
+#### Custom Icons
+Custom icons created for PAAT are licensed under MIT License
+
+### Fonts
+
+#### Inter Font (SIL Open Font License)
+Copyright (c) 2016-2020 The Inter Project Authors
+https://github.com/rsms/inter/blob/master/LICENSE.txt
+
+#### Roboto Font (Apache 2.0)
+Copyright Google Inc.
+https://fonts.google.com/specimen/Roboto
+
+---
+
+## Attribution
+
+This software uses the following open source packages:
+
+- React and React DOM for the user interface framework
+- Material-UI for the component library and design system
+- Electron for cross-platform desktop application capabilities
+- TypeScript for type-safe JavaScript development
+- Zustand for state management
+- SQLite for local database storage
+- Chokidar for file system monitoring
+- Axios for HTTP client functionality
+- Framer Motion for animations and transitions
+- Jest for testing framework
+- ESLint and Prettier for code quality
+- Webpack and Babel for build tooling
+
+We are grateful to all the open source contributors who made these projects possible.
+
+---
+
+## License Compatibility
+
+The MIT License is compatible with most other open source licenses. This allows 
+PAAT to be integrated into a wide variety of projects and use cases.
+
+### Compatible Licenses Include:
+- Apache 2.0
+- BSD (2-clause and 3-clause)
+- ISC
+- Public Domain
+- SIL Open Font License
+
+### Usage Rights
+
+Under the MIT License, you are free to:
+- Use the software for any purpose, including commercial use
+- Modify the software and create derivative works
+- Distribute the software and any modifications
+- Sublicense the software to third parties
+- Sell copies of the software
+
+### Requirements
+
+The only requirement is to include the copyright notice and license text in 
+all copies or substantial portions of the software.
+
+---
+
+## Disclaimer
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+
+For specific warranty information or commercial licensing options, please 
+contact the PAAT Development Team.
+
+---
+
+*Last Updated: August 27, 2025*
